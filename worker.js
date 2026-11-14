@@ -1,4 +1,4 @@
-const enc=new TextEncoder(), json=(d,s=200)=>new Response(JSON.stringify(d),{status:s,headers:{"content-type":"application/json","cache-control":"no-store"}});
+const enc=new TextEncoder(), ORIGIN="https://joelrobinson952-stack.github.io", cors={"access-control-allow-origin":ORIGIN,"access-control-allow-methods":"GET,POST,PUT,PATCH,DELETE,OPTIONS","access-control-allow-headers":"content-type","access-control-max-age":"86400","vary":"Origin"}, json=(d,s=200)=>new Response(JSON.stringify(d),{status:s,headers:{"content-type":"application/json","cache-control":"no-store",...cors}});
 const now=()=>new Date().toISOString(), uid=()=>crypto.randomUUID(), clean=(v,n=2000)=>String(v??"").trim().slice(0,n);
 const b64=b=>btoa(String.fromCharCode(...new Uint8Array(b))), unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 async function ph(p,s){const k=await crypto.subtle.importKey("raw",enc.encode(p),"PBKDF2",false,["deriveBits"]);return b64(await crypto.subtle.deriveBits({name:"PBKDF2",salt:s,iterations:150000,hash:"SHA-256"},k,256))}
@@ -60,4 +60,4 @@ async function handler(r,e){
  if(p.startsWith("admins/")&&m==="DELETE"){let count=await e.DB.prepare("SELECT COUNT(*) n FROM users").first();if(count.n<=1)return json({error:"Keep at least one admin."},400);await e.DB.prepare("DELETE FROM users WHERE id=?").bind(p.slice(7)).run();return json({ok:true})}
  return json({error:"Not found"},404)
 }
-export default {async fetch(r,e){let u=new URL(r.url);if(u.pathname.startsWith("/api/")){try{return await handler(r,e)}catch(err){return json({error:"Server error. Check database setup."},500)}}if(r.method!=="GET")return new Response("Method not allowed",{status:405});return new Response(PAGE,{headers:{"content-type":"text/html;charset=UTF-8","cache-control":"no-store"}})}};
+export default {async fetch(r,e){let u=new URL(r.url);if(u.pathname.startsWith("/api/")&&r.method==="OPTIONS")return new Response(null,{status:204,headers:cors});if(u.pathname.startsWith("/api/")){try{return await handler(r,e)}catch(err){return json({error:"Server error. Check database setup."},500)}}if(r.method!=="GET")return new Response("Method not allowed",{status:405});return new Response(PAGE,{headers:{"content-type":"text/html;charset=UTF-8","cache-control":"no-store"}})}};
