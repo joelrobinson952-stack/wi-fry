@@ -1,53 +1,61 @@
 # Wi-Fry Studios
 
-A full-stack website and studio admin portal for the Wi-Fry Roblox development team.
+Wi-Fry Studios public website and admin portal.
 
-## Features
+## Pages (hosted on GitHub Pages)
 
-- Public landing page with About Us, Roblox games and Discord links
-- Latest public announcements, including pinned announcements
-- Admin login with hashed passwords and secure, HTTP-only session cookies
-- Four-column Trello-style task board: To do, In progress, Review and Done
-- Create, move and delete tasks, with priority and assignee
+- Public homepage: `index.html`
+- Admin portal: `admin/index.html`
+- GitHub Actions publishing workflow: `.github/workflows/pages.yml`
+
+The website is published at `https://joelrobinson952-stack.github.io/wi-fry/`. Enable **Settings → Pages → Build and deployment → GitHub Actions** in the repository if you have not already.
+
+## Admin portal
+
+The admin page is also hosted on GitHub Pages at `https://joelrobinson952-stack.github.io/wi-fry/admin/`. Admins authenticate with **Sign in with GitHub**. The Cloudflare Worker is only the private API/authentication backend; it redirects the browser back to the GitHub-hosted admin page after OAuth.
+
+Features include:
+- GitHub OAuth admin sign-in, restricted to usernames explicitly added by an existing admin
+- Four-column Trello-style task board (To do, In progress, Review, Done)
+- Create, assign, prioritize, move and delete tasks
 - Publish, pin and delete announcements
-- Edit the public website's headline, tagline, About Us text and community links
-- Add and remove administrator accounts
-- Cloudflare D1 database persistence
+- Edit public homepage copy and Roblox/Discord links
+- Add and remove GitHub admin accounts
 
-## GitHub Pages website
+## One-time GitHub OAuth setup (required)
 
-The public website is in `index.html`. A GitHub Actions workflow at `.github/workflows/pages.yml` publishes it automatically whenever you push to `main`.
+1. While signed into the GitHub account that owns the studio, open [GitHub Developer Settings → OAuth Apps](https://github.com/settings/developers).
+2. Choose **New OAuth App**.
+3. Set **Application name** to `Wi-Fry Studios`.
+4. Set **Homepage URL** to `https://joelrobinson952-stack.github.io/wi-fry/`.
+5. Set **Authorization callback URL** to `https://wi-fry-studios.joel-robinson-952.workers.dev/auth/callback`.
+6. Register the app. Copy its **Client ID**.
+7. In Cloudflare, open **Workers & Pages → wi-fry-studios → Settings → Variables and Secrets**. Add `GITHUB_CLIENT_ID` as a text variable and `GITHUB_CLIENT_SECRET` as a secret (generate a client secret in the GitHub OAuth App page).
+8. Also make sure the existing `BOOTSTRAP_KEY` secret is set on the Worker. Never commit either secret to GitHub.
+9. Redeploy the Worker after adding variables/secrets if Cloudflare does not activate them automatically.
 
-To turn on GitHub Pages for this repository:
+## First admin setup
 
-1. Open the repository on GitHub and go to **Settings → Pages**.
-2. Under **Build and deployment**, choose **GitHub Actions** as the source.
-3. Open the **Actions** tab and allow workflows if GitHub asks.
-4. Run the **Deploy Wi-Fry website to GitHub Pages** workflow, or push another commit to `main`.
-5. GitHub will show the published URL in **Settings → Pages**. It should be `https://joelrobinson952-stack.github.io/wi-fry/`.
+1. Visit `https://joelrobinson952-stack.github.io/wi-fry/admin/`.
+2. On first setup, enter the one-time `BOOTSTRAP_KEY` and your GitHub username.
+3. Then select **Continue with GitHub** and authorize the OAuth app.
+4. Once signed in, add other admins by their exact GitHub usernames under **Admin accounts**.
 
-The static homepage reads public announcements from the Cloudflare Worker. The Worker allows read-only public API access from this GitHub Pages origin. Admin login remains on the Worker domain so secure session cookies stay same-origin.
+The first-admin setup endpoint locks itself after the first GitHub admin is registered. Do not share the bootstrap key.
 
-## Cloudflare deployment
+## Cloudflare backend
 
-The Worker and D1 database have been created in the connected Cloudflare account.
+- Worker: `wi-fry-studios`
+- Worker URL: `https://wi-fry-studios.joel-robinson-952.workers.dev`
+- D1 database: `wi-fry-portal`
+- D1 binding: `DB`
 
-1. Open **Cloudflare Dashboard → Workers & Pages → wi-fry-studios → Settings → Variables and Secrets**.
-2. Add a **Secret** named `BOOTSTRAP_KEY` with the one-time setup value supplied to the site owner in this chat.
-3. Confirm the Worker has the D1 binding `DB` pointing to database `wi-fry-portal` (already configured by the deployment).
-4. Open the Worker URL: `https://wi-fry-studios.joel-robinson-952.workers.dev`.
-5. The first visit will show the initial-admin setup screen. Enter the same setup key, your admin email and a strong password (12+ characters).
-6. Once the first admin exists, the setup endpoint automatically locks. Sign in using your email and password.
-7. Add other administrators from the Admin accounts tab. Give each person their own password.
+The D1 database has a `github_username` column and unique index for admin allowlisting. Public announcements and editable homepage settings are served by the Worker API. Admin API requests require a session issued after GitHub OAuth.
 
-Never commit the bootstrap key or passwords to GitHub. The public website and admin panel share the same Worker origin, so session cookies are HTTP-only and Secure.
+## Files
 
-## Local files
-
-- `worker.js` — website, API, authentication and admin portal
-- `schema.sql` — D1 database schema
-- `wrangler.toml` — Worker and D1 binding configuration
-
-## Notes
-
-This is the first working foundation. It intentionally keeps public content and admin-only tools on the same origin. The task board currently supports statuses, priorities and assignees; richer project spaces, comments, file uploads and audit history can be added as the studio grows.
+- `index.html` — public website
+- `admin/index.html` — GitHub-hosted admin portal
+- `worker.js` — Cloudflare API and GitHub OAuth callback
+- `schema.sql` — D1 schema
+- `wrangler.toml` — Worker/D1 configuration
