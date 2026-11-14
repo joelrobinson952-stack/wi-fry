@@ -1,8 +1,0 @@
-name = "wi-fry-studios"
-main = "worker.js"
-compatibility_date = "2026-11-14"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "wi-fry-portal"
-database_id = "4a192451-5eb7-4548-8cac-7ad27f091a21"
