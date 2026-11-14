@@ -14,6 +14,20 @@ A full-stack website and studio admin portal for the Wi-Fry Roblox development t
 - Add and remove administrator accounts
 - Cloudflare D1 database persistence
 
+## GitHub Pages website
+
+The public website is in `index.html`. A GitHub Actions workflow at `.github/workflows/pages.yml` publishes it automatically whenever you push to `main`.
+
+To turn on GitHub Pages for this repository:
+
+1. Open the repository on GitHub and go to **Settings → Pages**.
+2. Under **Build and deployment**, choose **GitHub Actions** as the source.
+3. Open the **Actions** tab and allow workflows if GitHub asks.
+4. Run the **Deploy Wi-Fry website to GitHub Pages** workflow, or push another commit to `main`.
+5. GitHub will show the published URL in **Settings → Pages**. It should be `https://joelrobinson952-stack.github.io/wi-fry/`.
+
+The static homepage reads public announcements from the Cloudflare Worker. The Worker allows read-only public API access from this GitHub Pages origin. Admin login remains on the Worker domain so secure session cookies stay same-origin.
+
 ## Cloudflare deployment
 
 The Worker and D1 database have been created in the connected Cloudflare account.
