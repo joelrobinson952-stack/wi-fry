@@ -41,7 +41,7 @@ async function init(){let st=await api("status");if(st.setupRequired){setup();re
 init();
 </script></body></html>`;
 async function handler(r,e){
- const u=new URL(r.url),p=u.pathname.replace(/^\\/api\\/?/,""),m=r.method;
+ const u=new URL(r.url),p=u.pathname.split("/").slice(2).join("/"),m=r.method;
  if(p==="status"){const x=await e.DB.prepare("SELECT COUNT(*) n FROM users").first();return json({setupRequired:x.n===0})}
  if(p==="public"){const s=await e.DB.prepare("SELECT key,value FROM settings").all(),a=await e.DB.prepare("SELECT * FROM announcements ORDER BY pinned DESC,created_at DESC LIMIT 10").all();return json({site:Object.fromEntries(s.results.map(x=>[x.key,x.value])),announcements:a.results})}
  if(p==="setup"&&m==="POST"){const d=await data(r),n=await e.DB.prepare("SELECT COUNT(*) n FROM users").first();if(n.n||!e.BOOTSTRAP_KEY||d.key!==e.BOOTSTRAP_KEY)return json({error:"Setup key invalid or setup already completed."},403);const email=clean(d.email,254).toLowerCase(),pw=clean(d.password,200);if(!email.includes("@")||pw.length<12)return json({error:"Use a valid email and a password of 12+ characters."},400);let salt=crypto.getRandomValues(new Uint8Array(16));await e.DB.prepare("INSERT INTO users(id,email,password_hash,salt,created_at) VALUES(?,?,?,?,?)").bind(uid(),email,await ph(pw,salt),b64(salt),now()).run();return json({ok:true})}
